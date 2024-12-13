@@ -1,48 +1,58 @@
 <script setup>
-import TheWelcome from "./components/TheWelcome.vue";
+import { onBeforeMount, ref } from "vue";
+
+import LoginView from "./views/LoginView.vue";
+import PostsView from "./views/PostsView.vue";
+
+import { saveUserToLocalStorage } from "./helpers/saveUserToLocalStorage";
+
+const isLoggedIn = ref(false);
+
+const user = ref(null);
+
+onBeforeMount(() => {
+  try {
+    const loggedUser = localStorage.getItem("user");
+
+    if (loggedUser) {
+      user.value = JSON.parse(loggedUser);
+    }
+
+    isLoggedIn.value = JSON.parse(localStorage.getItem("loggedIn")) || false;
+  } catch (e) {
+    console.error(e);
+  }
+});
+
+const handleLogin = (userData) => {
+  isLoggedIn.value = true;
+  user.value = userData;
+  saveUserToLocalStorage(userData);
+};
+
+const handleRegister = (userData) => {
+  isLoggedIn.value = true;
+  user.value = userData;
+  saveUserToLocalStorage(userData);
+};
+
+const handleLogout = () => {
+  isLoggedIn.value = false;
+  user.value = null;
+  localStorage.removeItem("user");
+  localStorage.setItem("loggedIn", JSON.stringify(false));
+};
 </script>
 
 <template>
-  <header>
-    <img
-      alt="Vue logo"
-      class="logo"
-      src="./assets/logo.svg"
-      width="125"
-      height="125"
-    />
-  </header>
+  <LoginView
+    v-if="!isLoggedIn"
+    :isLoggedIn="isLoggedIn"
+    @login="handleLogin"
+    @register="handleRegister"
+  />
 
-  <main>
-    <TheWelcome />
-  </main>
+  <template v-if="isLoggedIn">
+    <PostsView :user="user" @logout="handleLogout" />
+  </template>
 </template>
-
-<style scoped>
-header {
-  line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
-</style>
